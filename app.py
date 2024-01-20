@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import random
-import pyperclip
 import json
 
 st.set_page_config(layout="wide")
@@ -20,6 +19,18 @@ def create_layout():
     }
 
 layout = create_layout()
+
+def copy_text_to_clipboard_js(text):
+    js = f"""<script>
+    navigator.clipboard.writeText(`{text}`).then(() => {{
+        console.log('Text copied to clipboard');
+    }})
+    .catch(err => {{
+        console.error('Failed to copy text: ', err);
+    }});
+    </script>"""
+    return js
+
 
 # Function to split prompts into groups with specified rows per prompt
 def split_prompts(prompt_list, rows_per_prompt, prefix, suffix, seed_repeats):
@@ -136,17 +147,17 @@ with layout['buttons']:
         if st.button("Copy to Clipboard", key='copy_button'):
             if 0 <= st.session_state.prompt_index < len(st.session_state['prompt_df']):
                 prompt_text = st.session_state['prompt_df'].iloc[st.session_state.prompt_index]['Prompts']
-                pyperclip.copy(prompt_text)
+                # Copy to clipboard using JavaScript
+                st.markdown(copy_text_to_clipboard_js(prompt_text), unsafe_allow_html=True)
                 st.write(f"Prompt {st.session_state.prompt_index + 1} copied to clipboard.")
 
                 # Move to the next prompt
                 if st.session_state.prompt_index < len(st.session_state['prompt_df']) - 1:
                     st.session_state.prompt_index += 1
                 else:
-                    # If at the end of the list, go back to the start or stay at the end based on your preference
-                    st.session_state.prompt_index = 0  # or remove this line to stay at the end
+                    st.session_state.prompt_index = 0
 
-                # Redisplay the DataFrame with the new highlight in the container
+                # Redisplay the DataFrame with the new highlight
                 display_dataframe_in_container(st.session_state['prompt_df'], st.session_state.prompt_index)
 
     # Display the prompts in a data editor
